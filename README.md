@@ -2,6 +2,6 @@
 Mobile app to detect and classify traffic light
 
 ## Steps to run the app
-Traffic-Light-Classifier> cd react-native-app  
-react-native-app> npm install  
-react-native-app> npx expo start
+Traffic-Light-Classifier> cd camera-app 
+camera-app> npm install  
+camera-app> npx expo start

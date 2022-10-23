@@ -2,11 +2,11 @@ import React, {useState, useEffect} from 'react';
 import { StyleSheet, Text, View, Button, Image } from 'react-native';
 import { Camera } from 'expo-camera';
 
-export default function App() {
+export default function TakePhoto({onChooseOption}) {
   const [hasCameraPermission, setHasCameraPermission] = useState(null);
-const [camera, setCamera] = useState(null);
-const [image, setImage] = useState(null);
-const [type, setType] = useState(Camera.Constants.Type.back);
+  const [camera, setCamera] = useState(null);
+  const [image, setImage] = useState(null);
+  const [type, setType] = useState(Camera.Constants.Type.back);
 
   useEffect(() => {
     (async () => {
@@ -29,7 +29,7 @@ const [type, setType] = useState(Camera.Constants.Type.back);
   return (
     <View style={{ flex: 1}}>
       <View style={styles.camera}>
-        <Camera ref={ref => setCamera(ref)} style={styles.fixedRatio} type={type} ratio={'1:1'} />
+        <Camera ref={ref => setCamera(ref)} style={styles.fixedRatio} type={type} ratio={'1020:1980'} />
       </View>
       <Button
             title="Flip Image"
@@ -41,7 +41,8 @@ const [type, setType] = useState(Camera.Constants.Type.back);
               );
             }}>
      </Button>
-     <Button title="Take Picture" onPress={() => takePicture()} />
+     <Button title="Take picture" onPress={() => takePicture()} />
+     <Button title="Back to menu" onPress={() => onChooseOption('menu')} />
      {image && <Image source={{uri: image}} style={{flex:1}}/>}
     </View>
   );

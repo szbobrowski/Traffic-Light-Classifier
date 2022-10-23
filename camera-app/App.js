@@ -8,19 +8,15 @@ export default function App() {
    const onChooseOption = (option) => {
       switch(option) {
         case 'photo':
-          console.log('photo');
           setOption('photo')
           break;
         case 'realTime':
-          console.log('realTime');
           setOption('realTime')
           break;
         case 'about':
-          console.log('about');
           setOption('about')
           break;
         default:
-          console.log('menu');
           setOption('menu')
           break;
       }
@@ -29,11 +25,11 @@ export default function App() {
     switch(option) {
       case 'photo':
         return (
-          <TakePhoto />
+          <TakePhoto onChooseOption={onChooseOption}/>
         );
       case 'realTime':
         return (
-          <TakePhoto />
+          <TakePhoto onChooseOption={onChooseOption}/>
         );
       case 'about':
         return (
