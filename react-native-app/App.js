@@ -1,20 +1,83 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { StyleSheet, View, Pressable, Text  } from 'react-native';
 
 export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Hello, Traffic Light Classifier!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
+
+   const onChooseOption = (option) => {
+      switch(option) {
+        case 'photo':
+          console.log('photo');
+          break;
+        case 'realTime':
+          console.log('realTime');
+          break;
+        case 'about':
+          console.log('about');
+          break;
+        default:
+          console.log('default');
+          break;
+      }
+    }
+
+    return (
+      <View style={styles.mainContainer}>
+        <View style={styles.buttonContainer}>
+          <Pressable style={styles.button} onPress={() => {
+            onChooseOption('photo');
+          }}>
+            <Text style={styles.text}>Classify lights on photo</Text>
+          </Pressable>
+        </View>
+        <View style={styles.buttonContainer}>
+          <Pressable style={styles.button} onPress={() => {
+            onChooseOption('realTime');
+          }}>
+            <Text style={styles.text}>Real time detection && classification</Text>
+          </Pressable>
+        </View>
+        <View style={styles.buttonContainer}>
+          <Pressable style={styles.button} onPress={() => {
+            onChooseOption('about');
+          }}>
+            <Text style={styles.text}>About the app</Text>
+          </Pressable>
+        </View>
+      </View>
+    );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
+    display: 'flex',
+    backgroundColor: '#ececec',
     justifyContent: 'center',
+    alignItems: 'center',
   },
+  buttonContainer: {
+    height: 250,
+    width: '95%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  button: {
+    height: 150,
+    width: '90%',
+    margin: 20,
+    padding: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#b2fa9c',
+    borderRadius: 10,
+    borderWidth: 5,
+    borderColor: '#661274',
+  },
+  text: {
+    fontSize: 30,
+    color: '#1a2517',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  }
 });
