@@ -24,7 +24,7 @@ export default function TakePhoto({onChooseOption}) {
 
   if (hasCameraPermission === false) {
     return <Text>No Camera Access</Text>
-  } else
+  }
 
   return (
     <View style={{ flex: 1}}>
