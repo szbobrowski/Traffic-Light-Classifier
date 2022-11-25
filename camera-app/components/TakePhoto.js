@@ -2,7 +2,7 @@ import React, {useState, useEffect} from 'react';
 import { StyleSheet, Text, View, Button, Image } from 'react-native';
 import { Camera } from 'expo-camera';
 
-export default function TakePhoto({onChooseOption}) {
+export default function TakePhoto({onChooseOption, getPredictions}) {
   const [hasCameraPermission, setHasCameraPermission] = useState(null);
   const [camera, setCamera] = useState(null);
   const [image, setImage] = useState(null);
@@ -19,6 +19,7 @@ export default function TakePhoto({onChooseOption}) {
     if (camera) {
       const data = await camera.takePictureAsync(null);
       setImage(data.uri);
+      getPredictions(data.uri);
     }
   }
 
@@ -54,7 +55,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row'
   },
   fixedRatio:{
-      flex: 1,
-      aspectRatio: 1
+      height: 320,
+      width: '100%'
   }
 });
