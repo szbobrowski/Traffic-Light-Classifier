@@ -28,6 +28,8 @@ export default function App() {
     })
     
     setModel(model);
+
+    console.log('model loaded');
   }
 
   const transformImageToTensor = async (uri) => {
@@ -35,18 +37,19 @@ export default function App() {
       const imgBuffer =  tf.util.encodeString(img64, 'base64').buffer;
       const raw = new Uint8Array(imgBuffer);
       let imgTensor = decodeJpeg(raw);
-      const scalar = tf.scalar(255);
+      // const scalar = tf.scalar(255);
 
       imgTensor = tf.image.resizeNearestNeighbor(imgTensor, [48, 48])
 
-      const tensorScaled = imgTensor.div(scalar)
+      // const tensorScaled = imgTensor.div(scalar)
+      const img = tf.reshape(imgTensor, [1,48,48,3])
+      console.log('img', img);
 
-      const img = tf.reshape(tensorScaled, [1,48,48,3])
-      return img;
+      return img.toFloat();
   }
 
   const makePredictions = async ( batch, model, imagesTensor ) => {
-    const predictionsdata = model.predict(imagesTensor).dataSync();
+    const predictionsdata = model.predict(imagesTensor).arraySync();
     // let pred = predictionsdata.split(batch);
      
     return predictionsdata;
@@ -58,7 +61,7 @@ export default function App() {
     const tensorImage = await transformImageToTensor(image);
     const predictions = await makePredictions(1, model, tensorImage);
 
-    console.log(predictions);
+    console.log(predictions); // bg g r y
   }
 
   useEffect(() => {

@@ -18,6 +18,8 @@ export default function TakePhoto({onChooseOption, getPredictions}) {
   const takePicture = async () => {
     if (camera) {
       const data = await camera.takePictureAsync(null);
+      // console.log('data', data)
+      // console.log('data uri', data.uri);
       setImage(data.uri);
       getPredictions(data.uri);
     }
