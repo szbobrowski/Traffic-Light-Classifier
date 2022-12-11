@@ -4,10 +4,12 @@ import TakePhoto from './components/TakePhoto'
 import * as tf from '@tensorflow/tfjs'
 import {bundleResourceIO, decodeJpeg} from '@tensorflow/tfjs-react-native'
 import * as FileSystem from 'expo-file-system';
+import * as cocossd from "@tensorflow-models/coco-ssd";
 
 export default function App() {
   const [option, setOption] = useState('menu');
   const [model, setModel] = useState();
+  const [detector, setDetector] = useState();
 
   const loadModel = async () => {
     const modelJSON = require('./models/model.json')
@@ -28,8 +30,11 @@ export default function App() {
     })
     
     setModel(model);
-
     console.log('model loaded');
+
+    const detector = await cocossd.load();
+    setDetector(detector);
+    console.log('detector loaded');
   }
 
   const transformImageToTensor = async (uri) => {
@@ -44,20 +49,48 @@ export default function App() {
       return img.toFloat();
   }
 
+  const transformMainImageToTensor = async (uri) => {
+    const img64 = await FileSystem.readAsStringAsync(uri, {encoding:FileSystem.EncodingType.Base64})
+    const imgBuffer =  tf.util.encodeString(img64, 'base64').buffer;
+    const raw = new Uint8Array(imgBuffer);
+    let imgTensor = decodeJpeg(raw);
+
+    return imgTensor;
+  }
+
   const makePredictions = async ( batch, model, imagesTensor ) => {
     const predictionsdata = model.predict(imagesTensor).arraySync();
      
     return predictionsdata;
   }
 
+  const detect = async ( model, imagesTensor ) => {
+    const detectiondata = model.detect(imagesTensor);
+     
+    return detectiondata;
+  }
+
   const getPredictions = async (image) => {
     await tf.ready();
 
-    const tensorImage = await transformImageToTensor(image);
-    const predictions = await makePredictions(1, model, tensorImage);
+    const tensorImage = await transformMainImageToTensor(image);
+    const detections = await detect(detector, tensorImage);
+
+    console.log('img', image);
+
+    console.log('detections before', detections);
+
+    detections.filter(detection => detection.class === 'traffic light').forEach(trafficLight => {
+      console.log(trafficLight);
+    })
+
+    console.log('detections after', detections);
+
+    // const tensorImage = await transformImageToTensor(image);
+    // const predictions = await makePredictions(1, model, tensorImage);
 
     // console.log(predictions); // bg g r y
-    return predictions
+    return detections
   }
 
   useEffect(() => {

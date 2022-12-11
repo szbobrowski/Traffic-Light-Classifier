@@ -22,8 +22,9 @@ export default function TakePhoto({onChooseOption, getPredictions}) {
       setImage(data.uri);
       setResult(<Text style={styles.message}>waiting for results</Text>);
       const predictions = await getPredictions(data.uri);
-      console.log('predictions from takePhoto', predictions);
-      const position = getPositionOfHighestValue(predictions[0]);
+      // console.log('predictions from takePhoto', predictions);
+      // const position = getPositionOfHighestValue(predictions[0]);
+      const position = 0
       switch (position) {
         case 0:
           setResult(<Text style={styles.message}>no lights detected</Text>);
