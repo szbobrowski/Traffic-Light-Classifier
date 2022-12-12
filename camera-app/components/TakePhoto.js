@@ -1,6 +1,8 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import { StyleSheet, Text, View, Button, Image } from 'react-native';
 import { Camera } from 'expo-camera';
+import Canvas from 'react-native-canvas';
+import { drawRect } from '../utilities';
 
 export default function TakePhoto({onChooseOption, getPredictions}) {
   const [hasCameraPermission, setHasCameraPermission] = useState(null);
@@ -8,6 +10,7 @@ export default function TakePhoto({onChooseOption, getPredictions}) {
   const [image, setImage] = useState(null);
   const [type, setType] = useState(Camera.Constants.Type.back);
   const [result, setResult] = useState(<Text style={styles.message}></Text>);
+  const canvasRef = useRef(null);
 
   useEffect(() => {
     (async () => {
@@ -24,6 +27,7 @@ export default function TakePhoto({onChooseOption, getPredictions}) {
       const predictions = await getPredictions(data.uri);
       // console.log('predictions from takePhoto', predictions);
       // const position = getPositionOfHighestValue(predictions[0]);
+      handleCanvas();
       const position = 0
       switch (position) {
         case 0:
@@ -41,6 +45,17 @@ export default function TakePhoto({onChooseOption, getPredictions}) {
       }
     }
   }
+
+  const handleCanvas = (predictions) => {
+    if (canvasRef.current) {
+      
+      const ctx = canvasRef.current.getContext('2d');
+      console.log('canvasref');
+      ctx.fillStyle = 'red';
+      ctx.fillRect(20, 20, 100, 100);
+      drawRect(predictions, ctx);
+    }
+  };
 
   if (hasCameraPermission === false) {
     return <Text>No Camera Access</Text>
@@ -63,7 +78,10 @@ export default function TakePhoto({onChooseOption, getPredictions}) {
      </Button>
      <Button title="Take picture" onPress={() => takePicture()} />
      <Button title="Back to menu" onPress={() => onChooseOption('menu')} />
-     {image && <Image source={{uri: image}} style={{flex:1}}/>}
+     <View style={{flex: 1}}>
+        {image && <Image source={{uri: image}} style={{position: 'absolute', width: '100%', height: '100%'}}/>}
+        {image && <Canvas ref={canvasRef} style={{position: 'absolute', width: '100%', height: '100%'}}/>}
+     </View>
      <View style={styles.lightInfo}>
         {result}
      </View>

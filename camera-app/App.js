@@ -33,7 +33,7 @@ export default function App() {
     setModel(model);
     console.log('model loaded');
 
-    const detector = await cocossd.load();
+    const detector = await cocossd.load({base: 'mobilenet_v2'});
     setDetector(detector);
     console.log('detector loaded');
   }
@@ -71,6 +71,18 @@ export default function App() {
     return detectiondata;
   }
 
+  const getClassFromClassifications = (valuesArray) => {
+    if (valuesArray[0] > valuesArray[1] && valuesArray[0] > valuesArray[2] && valuesArray[0] > valuesArray[3]) {
+      return ['unknown', valuesArray[0]];
+    } else if (valuesArray[1] > valuesArray[0] && valuesArray[1] > valuesArray[2] && valuesArray[1] > valuesArray[3]) {
+      return ['green', valuesArray[1]];
+    } else if (valuesArray[2] > valuesArray[0] && valuesArray[2] > valuesArray[1] && valuesArray[2] > valuesArray[3]) {
+      return ['red', valuesArray[2]];
+    } else {
+      return ['yellow', valuesArray[3]];
+    }
+  }
+
   const getPredictions = async (image) => {
     await tf.ready();
 
@@ -78,16 +90,10 @@ export default function App() {
     const detections = await detect(detector, tensorImage);
 
     console.log('img', image);
-
     console.log('detections before', detections);
 
-    detections.filter(detection => detection.class === 'traffic light').forEach(trafficLight => {
+    const predictions = detections.filter(detection => detection.class === 'traffic light').forEach(async trafficLight => {
       console.log(trafficLight);
-
-      const cropData = {
-        offset: {x: trafficLight.bbox[0], y: trafficLight.bbox[1]},
-        size: {width: trafficLight.bbox[2], height: trafficLight.bbox[3]},
-      };
 
       const cropData2 = {
         height: trafficLight.bbox[3], 
@@ -105,19 +111,21 @@ export default function App() {
       imageManipulator.manipulateAsync(image, [{crop: cropData2}]).then(async result => {
         console.log('result', result);
 
-        const tensorImage = await transformImageToTensor(result.uri);
-        const predictions = await makePredictions(1, model, tensorImage);
+        const tensorImage2 = await transformImageToTensor(result.uri);
+        const classifications = await makePredictions(1, model, tensorImage2);
+        const [classification_class, classification_score ] = getClassFromClassifications(classifications);
 
         console.log('predictions', predictions);
 
-        return predictions
+        trafficLight.score = classification_score
+        trafficLight.class = classification_class;
+        
       });
     })
 
-    
 
-    // console.log(predictions); // bg g r y
-    return detections
+    console.log(predictions); // bg g r y
+    return predictions;
   }
 
   useEffect(() => {
@@ -145,9 +153,11 @@ export default function App() {
     }
 
     return (<>
-      {{photo: <TakePhoto onChooseOption={onChooseOption} getPredictions={getPredictions}/>,
-      realTime: <TakePhoto onChooseOption={onChooseOption}/>,
-      about: <Menu onChooseOption={onChooseOption}/>,
-      menu: <Menu onChooseOption={onChooseOption}/>}[option]}
+      {{
+        photo: <TakePhoto onChooseOption={onChooseOption} getPredictions={getPredictions}/>,
+        realTime: <TakePhoto onChooseOption={onChooseOption}/>,
+        about: <Menu onChooseOption={onChooseOption}/>,
+        menu: <Menu onChooseOption={onChooseOption}/>
+      }[option]}
     </>)
 }
