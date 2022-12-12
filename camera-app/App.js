@@ -5,6 +5,7 @@ import * as tf from '@tensorflow/tfjs'
 import {bundleResourceIO, decodeJpeg} from '@tensorflow/tfjs-react-native'
 import * as FileSystem from 'expo-file-system';
 import * as cocossd from "@tensorflow-models/coco-ssd";
+import * as imageManipulator from 'expo-image-manipulator';
 
 export default function App() {
   const [option, setOption] = useState('menu');
@@ -82,12 +83,38 @@ export default function App() {
 
     detections.filter(detection => detection.class === 'traffic light').forEach(trafficLight => {
       console.log(trafficLight);
+
+      const cropData = {
+        offset: {x: trafficLight.bbox[0], y: trafficLight.bbox[1]},
+        size: {width: trafficLight.bbox[2], height: trafficLight.bbox[3]},
+      };
+
+      const cropData2 = {
+        height: trafficLight.bbox[3], 
+        originX: trafficLight.bbox[0], 
+        originY: trafficLight.bbox[1], 
+        width: trafficLight.bbox[2]
+      }
+
+      console.log('image', image)
+
+      // ImageEditor.cropImage(image, cropData).then(url => {
+      //   console.log("Cropped image uri", url);
+      // })
+
+      imageManipulator.manipulateAsync(image, [{crop: cropData2}]).then(async result => {
+        console.log('result', result);
+
+        const tensorImage = await transformImageToTensor(result.uri);
+        const predictions = await makePredictions(1, model, tensorImage);
+
+        console.log('predictions', predictions);
+
+        return predictions
+      });
     })
 
-    console.log('detections after', detections);
-
-    // const tensorImage = await transformImageToTensor(image);
-    // const predictions = await makePredictions(1, model, tensorImage);
+    
 
     // console.log(predictions); // bg g r y
     return detections
@@ -117,22 +144,10 @@ export default function App() {
       }
     }
 
-    switch(option) {
-      case 'photo':
-        return (
-          <TakePhoto onChooseOption={onChooseOption} getPredictions={getPredictions}/>
-        );
-      case 'realTime':
-        return (
-          <TakePhoto onChooseOption={onChooseOption}/>
-        );
-      case 'about':
-        return (
-          <Menu onChooseOption={onChooseOption}/>
-        );
-      default:
-        return (
-          <Menu onChooseOption={onChooseOption}/>
-        );
-    }
+    return (<>
+      {{photo: <TakePhoto onChooseOption={onChooseOption} getPredictions={getPredictions}/>,
+      realTime: <TakePhoto onChooseOption={onChooseOption}/>,
+      about: <Menu onChooseOption={onChooseOption}/>,
+      menu: <Menu onChooseOption={onChooseOption}/>}[option]}
+    </>)
 }
