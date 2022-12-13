@@ -3,59 +3,72 @@ import { StyleSheet, Text, View, Button, Image } from 'react-native';
 import { Camera } from 'expo-camera';
 import Canvas from 'react-native-canvas';
 import { drawRect } from '../utilities';
+import * as ImageManipulator from 'expo-image-manipulator';
 
-export default function TakePhoto({onChooseOption, getPredictions}) {
+export default function TakePhoto({onChooseOption, getPredictions, realTime}) {
   const [hasCameraPermission, setHasCameraPermission] = useState(null);
   const [camera, setCamera] = useState(null);
   const [image, setImage] = useState(null);
+  const [width, setWidth] = useState(0);
+  const [height, setHeight] = useState(0);
   const [type, setType] = useState(Camera.Constants.Type.back);
-  const [result, setResult] = useState(<Text style={styles.message}></Text>);
   const canvasRef = useRef(null);
+
+  const runRealTime = async () => {
+    console.log("Start Real Time");
+    setInterval(() => {
+      takePicture();
+    }, 1000);
+  };
+
+  const takePicture = async () => {
+    if (camera) {
+      const data = await camera.takePictureAsync(null);
+      console.log("new photo taken", data);
+      clearCanvas();
+
+      const resizedPhoto = await ImageManipulator.manipulateAsync(
+        data.uri,
+        [{ resize: { width: width, height: height } }],
+        { compress: 0.8, format: "jpeg", base64: false }
+      );
+      console.log("Resized taken", resizedPhoto);
+      
+      setImage(resizedPhoto.uri);
+
+      const predictions = await getPredictions(resizedPhoto.uri);
+      handleCanvas(predictions, resizedPhoto.width, resizedPhoto.height);
+    }
+  }
+
+  const handleCanvas = (predictions, imgWidth, imgHeight) => {
+    if (canvasRef.current) {
+      const ctx = canvasRef.current.getContext('2d');
+      canvasRef.current.width = width;
+      canvasRef.current.height = height;
+      console.log("W and H", width, height);
+      drawRect(predictions, imgWidth, imgHeight, width, height, ctx);
+    }
+  };
+
+  const clearCanvas = () => {
+    if (canvasRef.current) {
+      const ctx = canvasRef.current.getContext('2d');
+      ctx.clearRect(0,0, width, height);
+    }
+  };
 
   useEffect(() => {
     (async () => {
       const cameraStatus = await Camera.requestCameraPermissionsAsync();
       setHasCameraPermission(cameraStatus.status === 'granted');
     })();
+    clearCanvas();
+
+    if(realTime){
+      runRealTime();
+    }
   }, []);
-
-  const takePicture = async () => {
-    if (camera) {
-      const data = await camera.takePictureAsync(null);
-      setImage(data.uri);
-      setResult(<Text style={styles.message}>waiting for results</Text>);
-      const predictions = await getPredictions(data.uri);
-      // console.log('predictions from takePhoto', predictions);
-      // const position = getPositionOfHighestValue(predictions[0]);
-      handleCanvas();
-      const position = 0
-      switch (position) {
-        case 0:
-          setResult(<Text style={styles.message}>no lights detected</Text>);
-          break;
-        case 1:
-          setResult(<Text style={[styles.message, styles.green]}>green</Text>);
-          break;
-        case 2:
-          setResult(<Text style={[styles.message, styles.red]}>red</Text>);
-          break;
-        case 3:
-          setResult(<Text style={[styles.message, styles.orange]}>orange</Text>);
-          break;
-      }
-    }
-  }
-
-  const handleCanvas = (predictions) => {
-    if (canvasRef.current) {
-      
-      const ctx = canvasRef.current.getContext('2d');
-      console.log('canvasref');
-      ctx.fillStyle = 'red';
-      ctx.fillRect(20, 20, 100, 100);
-      drawRect(predictions, ctx);
-    }
-  };
 
   if (hasCameraPermission === false) {
     return <Text>No Camera Access</Text>
@@ -76,30 +89,22 @@ export default function TakePhoto({onChooseOption, getPredictions}) {
               );
             }}>
      </Button>
-     <Button title="Take picture" onPress={() => takePicture()} />
+     {!realTime && <Button title="Take picture" onPress={() => takePicture()} />}
      <Button title="Back to menu" onPress={() => onChooseOption('menu')} />
-     <View style={{flex: 1}}>
-        {image && <Image source={{uri: image}} style={{position: 'absolute', width: '100%', height: '100%'}}/>}
-        {image && <Canvas ref={canvasRef} style={{position: 'absolute', width: '100%', height: '100%'}}/>}
-     </View>
-     <View style={styles.lightInfo}>
-        {result}
+     <View 
+      style={{flex: 1, position: 'relative'}}
+      onLayout={({ nativeEvent }) => {
+        const { _x, _y, width, height } = nativeEvent.layout;
+        setWidth(Math.floor(width));
+        setHeight(Math.floor(height));
+      }}
+     >
+        {image && <Image source={{uri: image}} style={{position: 'absolute', width: width, height: height}}/>}
+        <Canvas ref={canvasRef} width={width} height={height} style={{position: 'absolute'}}/>
      </View>
     </View>
   );
 }
-
-function getPositionOfHighestValue(valuesArray) {
-  if (valuesArray[0] > valuesArray[1] && valuesArray[0] > valuesArray[2] && valuesArray[0] > valuesArray[3]) {
-    return 0;
-  } else if (valuesArray[1] > valuesArray[0] && valuesArray[1] > valuesArray[2] && valuesArray[1] > valuesArray[3]) {
-    return 1;
-  } else if (valuesArray[2] > valuesArray[0] && valuesArray[2] > valuesArray[1] && valuesArray[2] > valuesArray[3]) {
-    return 2;
-  } else {
-    return 3;
-  }
-} 
 
 const styles = StyleSheet.create({
   cameraContainer: {
@@ -118,13 +123,4 @@ const styles = StyleSheet.create({
     fontSize: 28,
     textAlign: 'center'
   },
-  red: {
-    color: 'red',
-  },
-  green: {
-    color: 'green',
-  },
-  orange: {
-    color: 'orange'
-  }
 });
