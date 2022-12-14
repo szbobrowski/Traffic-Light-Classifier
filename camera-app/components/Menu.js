@@ -10,7 +10,7 @@ export default function Menu({onChooseOption}) {
                 <Text style={styles.text}>Classify lights on photo</Text>
             </Pressable>
         </View>
-        <View style={styles.buttonContainer}>
+        {/* <View style={styles.buttonContainer}>
             <Pressable style={styles.button} onPress={() => {
                 onChooseOption('realTime');
             }}>
@@ -23,7 +23,7 @@ export default function Menu({onChooseOption}) {
             }}>
                 <Text style={styles.text}>About the app</Text>
             </Pressable>
-        </View>
+        </View> */}
     </View>)
 } 
 
